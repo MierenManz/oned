@@ -382,6 +382,10 @@ impl NpmResolution {
       .cloned()
   }
 
+  pub fn all_packages(&self) -> Vec<NpmResolutionPackage> {
+    self.snapshot.read().all_packages()
+  }
+
   pub fn all_packages_partitioned(&self) -> NpmPackagesPartitioned {
     self.snapshot.read().all_packages_partitioned()
   }
@@ -394,12 +398,15 @@ impl NpmResolution {
     self.snapshot.read().clone()
   }
 
-  pub fn lock(&self, lockfile: &mut Lockfile) -> Result<(), AnyError> {
-    let snapshot = self.snapshot.read();
+  pub fn lock(
+    &self,
+    lockfile: &mut Lockfile,
+    snapshot: &NpmResolutionSnapshot,
+  ) -> Result<(), AnyError> {
     for (package_req, package_id) in snapshot.package_reqs.iter() {
       lockfile.insert_npm_specifier(package_req, package_id);
     }
-    for package in snapshot.all_packages() {
+    for package in self.all_packages() {
       lockfile.check_or_insert_npm_package(&package)?;
     }
     Ok(())
