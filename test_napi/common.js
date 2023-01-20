@@ -4,7 +4,6 @@ export {
   assert,
   assertEquals,
   assertRejects,
-  assertThrows,
 } from "../test_util/std/testing/asserts.ts";
 export { fromFileUrl } from "../test_util/std/path/mod.ts";
 
