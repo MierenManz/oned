@@ -11,7 +11,6 @@ pub mod arraybuffer;
 pub mod r#async;
 pub mod callback;
 pub mod coerce;
-pub mod date;
 pub mod numbers;
 pub mod object_wrap;
 pub mod primitives;
@@ -128,7 +127,6 @@ unsafe extern "C" fn napi_register_module_v1(
   object_wrap::init(env, exports);
   callback::init(env, exports);
   r#async::init(env, exports);
-  date::init(env, exports);
   tsfn::init(env, exports);
   init_cleanup_hook(env, exports);
 
