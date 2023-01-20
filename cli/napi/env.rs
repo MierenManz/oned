@@ -52,49 +52,24 @@ fn napi_fatal_exception(env: *mut Env, value: napi_value) -> Result {
   );
 }
 
+// TODO: properly implement
 #[napi_sym::napi_sym]
 fn napi_add_env_cleanup_hook(
-  env: *mut Env,
-  hook: extern "C" fn(*const c_void),
-  data: *const c_void,
+  _env: *mut Env,
+  _hook: extern "C" fn(*const c_void),
+  _data: *const c_void,
 ) -> Result {
-  let env: &mut Env = env.as_mut().ok_or(Error::InvalidArg)?;
-
-  {
-    let mut env_cleanup_hooks = env.cleanup_hooks.borrow_mut();
-    if env_cleanup_hooks
-      .iter()
-      .any(|pair| pair.0 == hook && pair.1 == data)
-    {
-      panic!("Cleanup hook with this data already registered");
-    }
-    env_cleanup_hooks.push((hook, data));
-  }
+  log::info!("napi_add_env_cleanup_hook is currently not supported");
   Ok(())
 }
 
 #[napi_sym::napi_sym]
 fn napi_remove_env_cleanup_hook(
-  env: *mut Env,
-  hook: extern "C" fn(*const c_void),
-  data: *const c_void,
+  _env: *mut Env,
+  _hook: extern "C" fn(*const c_void),
+  _data: *const c_void,
 ) -> Result {
-  let env: &mut Env = env.as_mut().ok_or(Error::InvalidArg)?;
-
-  {
-    let mut env_cleanup_hooks = env.cleanup_hooks.borrow_mut();
-    // Hooks are supposed to be removed in LIFO order
-    let maybe_index = env_cleanup_hooks
-      .iter()
-      .rposition(|&pair| pair.0 == hook && pair.1 == data);
-
-    if let Some(index) = maybe_index {
-      env_cleanup_hooks.remove(index);
-    } else {
-      panic!("Cleanup hook with this data not found");
-    }
-  }
-
+  log::info!("napi_remove_env_cleanup_hook is currently not supported");
   Ok(())
 }
 
