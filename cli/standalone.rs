@@ -23,7 +23,6 @@ use deno_core::url::Url;
 use deno_core::v8_set_flags;
 use deno_core::ModuleLoader;
 use deno_core::ModuleSpecifier;
-use deno_core::ResolutionKind;
 use deno_graph::source::Resolver;
 use deno_runtime::deno_broadcast_channel::InMemoryBroadcastChannel;
 use deno_runtime::deno_web::BlobStore;
@@ -135,7 +134,7 @@ impl ModuleLoader for EmbeddedModuleLoader {
     &self,
     specifier: &str,
     referrer: &str,
-    _kind: ResolutionKind,
+    _is_main: bool,
   ) -> Result<ModuleSpecifier, AnyError> {
     // Try to follow redirects when resolving.
     let referrer = match self.eszip.get_module(referrer) {

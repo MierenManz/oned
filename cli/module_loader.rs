@@ -20,7 +20,6 @@ use deno_core::ModuleSource;
 use deno_core::ModuleSpecifier;
 use deno_core::ModuleType;
 use deno_core::OpState;
-use deno_core::ResolutionKind;
 use deno_core::SourceMapGetter;
 use deno_runtime::permissions::PermissionsContainer;
 use std::cell::RefCell;
@@ -37,38 +36,28 @@ struct ModuleCodeSource {
 pub struct CliModuleLoader {
   pub lib: TsTypeLib,
   /// The initial set of permissions used to resolve the static imports in the
-  /// worker. These are "allow all" for main worker, and parent thread
-  /// permissions for Web Worker.
+  /// worker. They are decoupled from the worker (dynamic) permissions since
+  /// read access errors must be raised based on the parent thread permissions.
   pub root_permissions: PermissionsContainer,
-  /// Permissions used to resolve dynamic imports, these get passed as
-  /// "root permissions" for Web Worker.
-  dynamic_permissions: PermissionsContainer,
   pub ps: ProcState,
 }
 
 impl CliModuleLoader {
-  pub fn new(
-    ps: ProcState,
-    root_permissions: PermissionsContainer,
-    dynamic_permissions: PermissionsContainer,
-  ) -> Rc<Self> {
+  pub fn new(ps: ProcState) -> Rc<Self> {
     Rc::new(CliModuleLoader {
       lib: ps.options.ts_type_lib_window(),
-      root_permissions,
-      dynamic_permissions,
+      root_permissions: PermissionsContainer::allow_all(),
       ps,
     })
   }
 
   pub fn new_for_worker(
     ps: ProcState,
-    root_permissions: PermissionsContainer,
-    dynamic_permissions: PermissionsContainer,
+    permissions: PermissionsContainer,
   ) -> Rc<Self> {
     Rc::new(CliModuleLoader {
       lib: ps.options.ts_type_lib_worker(),
-      root_permissions,
-      dynamic_permissions,
+      root_permissions: permissions,
       ps,
     })
   }
@@ -149,7 +138,6 @@ impl CliModuleLoader {
     &self,
     specifier: &ModuleSpecifier,
     maybe_referrer: Option<ModuleSpecifier>,
-    is_dynamic: bool,
   ) -> Result<ModuleSource, AnyError> {
     let code_source = if self.ps.npm_resolver.in_npm_package(specifier) {
       let file_path = specifier.to_file_path().unwrap();
@@ -164,11 +152,6 @@ impl CliModuleLoader {
       })?;
 
       let code = if self.ps.cjs_resolutions.lock().contains(specifier) {
-        let mut permissions = if is_dynamic {
-          self.dynamic_permissions.clone()
-        } else {
-          self.root_permissions.clone()
-        };
         // translate cjs to esm if it's cjs and inject node globals
         node::translate_cjs_to_esm(
           &self.ps.file_fetcher,
@@ -177,7 +160,6 @@ impl CliModuleLoader {
           MediaType::Cjs,
           &self.ps.npm_resolver,
           &self.ps.node_analysis_cache,
-          &mut permissions,
         )?
       } else {
         // only inject node globals for esm
@@ -221,35 +203,28 @@ impl ModuleLoader for CliModuleLoader {
     &self,
     specifier: &str,
     referrer: &str,
-    kind: ResolutionKind,
+    _is_main: bool,
   ) -> Result<ModuleSpecifier, AnyError> {
-    let mut permissions = if matches!(kind, ResolutionKind::DynamicImport) {
-      self.dynamic_permissions.clone()
-    } else {
-      self.root_permissions.clone()
-    };
-    self.ps.resolve(specifier, referrer, &mut permissions)
+    self.ps.resolve(specifier, referrer)
   }
 
   fn load(
     &self,
     specifier: &ModuleSpecifier,
     maybe_referrer: Option<ModuleSpecifier>,
-    is_dynamic: bool,
+    _is_dynamic: bool,
   ) -> Pin<Box<deno_core::ModuleSourceFuture>> {
     // NOTE: this block is async only because of `deno_core` interface
     // requirements; module was already loaded when constructing module graph
     // during call to `prepare_load` so we can load it synchronously.
-    Box::pin(deno_core::futures::future::ready(self.load_sync(
-      specifier,
-      maybe_referrer,
-      is_dynamic,
-    )))
+    Box::pin(deno_core::futures::future::ready(
+      self.load_sync(specifier, maybe_referrer),
+    ))
   }
 
   fn prepare_load(
     &self,
-    _op_state: Rc<RefCell<OpState>>,
+    op_state: Rc<RefCell<OpState>>,
     specifier: &ModuleSpecifier,
     _maybe_referrer: Option<String>,
     is_dynamic: bool,
@@ -261,14 +236,17 @@ impl ModuleLoader for CliModuleLoader {
 
     let specifier = specifier.clone();
     let ps = self.ps.clone();
+    let state = op_state.borrow();
 
-    let dynamic_permissions = self.dynamic_permissions.clone();
+    let dynamic_permissions = state.borrow::<PermissionsContainer>().clone();
     let root_permissions = if is_dynamic {
-      self.dynamic_permissions.clone()
+      dynamic_permissions.clone()
     } else {
       self.root_permissions.clone()
     };
     let lib = self.lib;
+
+    drop(state);
 
     async move {
       ps.prepare_module_load(

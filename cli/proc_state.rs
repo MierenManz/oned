@@ -558,7 +558,6 @@ impl ProcState {
     &self,
     specifier: &str,
     referrer: &str,
-    permissions: &mut PermissionsContainer,
   ) -> Result<ModuleSpecifier, AnyError> {
     if let Ok(referrer) = deno_core::resolve_url_or_path(referrer) {
       if self.npm_resolver.in_npm_package(&referrer) {
@@ -569,7 +568,6 @@ impl ProcState {
             &referrer,
             NodeResolutionMode::Execution,
             &self.npm_resolver,
-            permissions,
           ))
           .with_context(|| {
             format!("Could not resolve '{}' from '{}'.", specifier, referrer)
@@ -603,7 +601,6 @@ impl ProcState {
                 &reference,
                 NodeResolutionMode::Execution,
                 &self.npm_resolver,
-                permissions,
               ))
               .with_context(|| format!("Could not resolve '{}'.", reference));
           } else {
@@ -647,7 +644,6 @@ impl ProcState {
               &reference,
               deno_runtime::deno_node::NodeResolutionMode::Execution,
               &self.npm_resolver,
-              permissions,
             ))
             .with_context(|| format!("Could not resolve '{}'.", reference));
         }

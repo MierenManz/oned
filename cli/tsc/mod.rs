@@ -34,7 +34,6 @@ use deno_core::RuntimeOptions;
 use deno_core::Snapshot;
 use deno_graph::Resolved;
 use deno_runtime::deno_node::NodeResolutionMode;
-use deno_runtime::permissions::PermissionsContainer;
 use once_cell::sync::Lazy;
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -666,7 +665,6 @@ fn op_resolve(
                   &referrer,
                   NodeResolutionMode::Types,
                   npm_resolver,
-                  &mut PermissionsContainer::allow_all(),
                 )
                 .ok()
                 .flatten(),
@@ -723,7 +721,6 @@ pub fn resolve_npm_package_reference_types(
     npm_ref,
     NodeResolutionMode::Types,
     npm_resolver,
-    &mut PermissionsContainer::allow_all(),
   )?;
   Ok(NodeResolution::into_specifier_and_media_type(
     maybe_resolution,

@@ -11,7 +11,6 @@ use deno_core::error::custom_error;
 use deno_core::error::AnyError;
 use deno_core::parking_lot::Mutex;
 use deno_core::serde_json;
-use deno_runtime::deno_node::NodePermissions;
 use deno_runtime::deno_node::NodeResolutionMode;
 use deno_runtime::deno_node::PathClean;
 use deno_runtime::deno_node::RequireNpmResolver;
@@ -368,12 +367,8 @@ impl RequireNpmResolver for NpmPackageResolver {
       .is_ok()
   }
 
-  fn ensure_read_permission(
-    &self,
-    permissions: &mut dyn NodePermissions,
-    path: &Path,
-  ) -> Result<(), AnyError> {
-    self.inner.ensure_read_permission(permissions, path)
+  fn ensure_read_permission(&self, path: &Path) -> Result<(), AnyError> {
+    self.inner.ensure_read_permission(path)
   }
 }
 
