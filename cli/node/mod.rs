@@ -391,19 +391,14 @@ static RESERVED_WORDS: Lazy<HashSet<&str>> = Lazy::new(|| {
 
 pub async fn initialize_runtime(
   js_runtime: &mut JsRuntime,
-  uses_local_node_modules_dir: bool,
 ) -> Result<(), AnyError> {
   let source_code = &format!(
-    r#"(async function loadBuiltinNodeModules(moduleAllUrl, nodeGlobalThisName, usesLocalNodeModulesDir) {{
+    r#"(async function loadBuiltinNodeModules(moduleAllUrl, nodeGlobalThisName) {{
       const moduleAll = await import(moduleAllUrl);
       Deno[Deno.internal].node.initialize(moduleAll.default, nodeGlobalThisName);
-      if (usesLocalNodeModulesDir) {{
-        Deno[Deno.internal].require.setUsesLocalNodeModulesDir();
-      }}
-    }})('{}', '{}', {});"#,
+    }})('{}', '{}');"#,
     MODULE_ALL_URL.as_str(),
     NODE_GLOBAL_THIS_NAME.as_str(),
-    uses_local_node_modules_dir,
   );
 
   let value =

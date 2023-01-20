@@ -71,8 +71,6 @@
   let mainModule = null;
   let hasBrokenOnInspectBrk = false;
   let hasInspectBrk = false;
-  // Are we running with --node-modules-dir flag?
-  let usesLocalNodeModulesDir = false;
 
   function stat(filename) {
     // TODO: required only on windows
@@ -361,10 +359,10 @@
       const isRelative = ops.op_require_is_request_relative(
         request,
       );
-      const basePath =
-        (isDenoDirPackage && !isRelative && !usesLocalNodeModulesDir)
-          ? pathResolve(curPath, packageSpecifierSubPath(request))
-          : pathResolve(curPath, request);
+      // TODO(bartlomieju): could be a single op
+      const basePath = (isDenoDirPackage && !isRelative)
+        ? pathResolve(curPath, packageSpecifierSubPath(request))
+        : pathResolve(curPath, request);
       let filename;
 
       const rc = stat(basePath);
@@ -917,9 +915,6 @@
   window.__bootstrap.internals = {
     ...window.__bootstrap.internals ?? {},
     require: {
-      setUsesLocalNodeModulesDir() {
-        usesLocalNodeModulesDir = true;
-      },
       setInspectBrk() {
         hasInspectBrk = true;
       },
