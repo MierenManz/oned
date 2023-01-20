@@ -14,7 +14,6 @@ use crate::modules::ModuleLoadId;
 use crate::modules::ModuleLoader;
 use crate::modules::ModuleMap;
 use crate::modules::NoopModuleLoader;
-use crate::modules::SymbolicModule;
 use crate::op_void_async;
 use crate::op_void_sync;
 use crate::ops::*;
@@ -2711,6 +2710,7 @@ pub mod tests {
   use crate::modules::ModuleSource;
   use crate::modules::ModuleSourceFuture;
   use crate::modules::ModuleType;
+  use crate::modules::SymbolicModule;
   use crate::ZeroCopyBuf;
   use deno_ops::op;
   use futures::future::lazy;
