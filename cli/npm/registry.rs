@@ -1,6 +1,5 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 
-use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -179,31 +178,8 @@ impl NpmPackageVersionInfo {
 pub struct NpmPackageVersionDistInfo {
   /// URL to the tarball.
   pub tarball: String,
-  shasum: String,
-  integrity: Option<String>,
-}
-
-impl NpmPackageVersionDistInfo {
-  #[cfg(test)]
-  pub fn new(
-    tarball: String,
-    shasum: String,
-    integrity: Option<String>,
-  ) -> Self {
-    Self {
-      tarball,
-      shasum,
-      integrity,
-    }
-  }
-
-  pub fn integrity(&self) -> Cow<String> {
-    self
-      .integrity
-      .as_ref()
-      .map(Cow::Borrowed)
-      .unwrap_or_else(|| Cow::Owned(format!("sha1-{}", self.shasum)))
-  }
+  pub shasum: String,
+  pub integrity: Option<String>,
 }
 
 pub trait NpmRegistryApi: Clone + Sync + Send + 'static {
