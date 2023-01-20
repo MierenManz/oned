@@ -14,6 +14,7 @@ use crate::modules::ModuleLoadId;
 use crate::modules::ModuleLoader;
 use crate::modules::ModuleMap;
 use crate::modules::NoopModuleLoader;
+use crate::modules::SymbolicModule;
 use crate::op_void_async;
 use crate::op_void_sync;
 use crate::ops::*;
