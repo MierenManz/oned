@@ -445,13 +445,7 @@ fn resolve_package_target(
       mode,
       npm_resolver,
     )
-    .map(|path| {
-      if mode.is_types() {
-        path_to_declaration_path(path, referrer_kind)
-      } else {
-        Some(path)
-      }
-    });
+    .map(Some);
   } else if let Some(target_arr) = target.as_array() {
     if target_arr.is_empty() {
       return Ok(None);
