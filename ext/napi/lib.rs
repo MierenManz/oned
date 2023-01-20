@@ -343,32 +343,11 @@ pub struct NapiState {
 
 impl Drop for NapiState {
   fn drop(&mut self) {
-    let hooks = {
-      let h = self.env_cleanup_hooks.borrow_mut();
-      h.clone()
-    };
-
+    let mut hooks = self.env_cleanup_hooks.borrow_mut();
     // Hooks are supposed to be run in LIFO order
-    let hooks_to_run = hooks.into_iter().rev();
-
-    for hook in hooks_to_run {
-      // This hook might have been removed by a previous hook, in such case skip it here.
-      if !self
-        .env_cleanup_hooks
-        .borrow()
-        .iter()
-        .any(|pair| pair.0 == hook.0 && pair.1 == hook.1)
-      {
-        continue;
-      }
-
-      (hook.0)(hook.1);
-      {
-        self
-          .env_cleanup_hooks
-          .borrow_mut()
-          .retain(|pair| !(pair.0 == hook.0 && pair.1 == hook.1));
-      }
+    let hooks = hooks.drain(..).rev();
+    for (fn_ptr, data) in hooks {
+      (fn_ptr)(data);
     }
   }
 }
