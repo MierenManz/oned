@@ -9,7 +9,6 @@ use napi_sys::TypedarrayType;
 use napi_sys::ValueType::napi_number;
 use napi_sys::ValueType::napi_object;
 use napi_sys::*;
-use std::os::raw::c_char;
 use std::ptr;
 
 extern "C" fn test_multiply(
@@ -104,8 +103,7 @@ extern "C" fn test_multiply(
     assert_napi_ok!(napi_throw_error(
       env,
       ptr::null(),
-      "Typed array was of a type not expected by test.".as_ptr()
-        as *const c_char,
+      "Typed array was of a type not expected by test.".as_ptr() as *const i8,
     ));
     return ptr::null_mut();
   }
